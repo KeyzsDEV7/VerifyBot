@@ -1,4 +1,10 @@
 {
+  "scripts": {
+    "start": "node index.js"
+  }
+}
+
+{
   "name": "verify-bot",
   "version": "1.0.0",
   "main": "index.js",
@@ -13,3 +19,4 @@
     "node-fetch": "^2.7.0"
   }
 }
+
