@@ -37,7 +37,8 @@ client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
   if (interaction.commandName !== "verify") return;
 
-  const url = `${process.env.BASE_URL}/verify?user_id=${interaction.user.id}`;
+  // 🔹 TU KIERUJEMY NA TWOJĄ STRONĘ HTML
+  const url = `${process.env.FRONTEND_URL}?user_id=${interaction.user.id}`;
 
   const embed = new EmbedBuilder()
     .setTitle("Weryfikacja serwera")
@@ -68,7 +69,8 @@ app.get("/", (req, res) => {
   res.send("OK");
 });
 
-app.get("/verify", (req, res) => {
+/* 🔹 START OAUTH (wywoływany ze strony HTML) */
+app.get("/verify/start", (req, res) => {
   const { user_id } = req.query;
   if (!user_id) return res.send("Missing user_id");
 
@@ -83,6 +85,7 @@ app.get("/verify", (req, res) => {
   res.redirect(url);
 });
 
+/* 🔹 CALLBACK OAUTH */
 app.get("/callback", async (req, res) => {
   const { code, state } = req.query;
   if (!code || !state) return res.send("Invalid callback");
@@ -150,3 +153,4 @@ app.listen(PORT, () => {
 });
 
 client.login(process.env.BOT_TOKEN);
+
