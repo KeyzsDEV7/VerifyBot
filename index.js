@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 const fetch = require("node-fetch");
 const express = require("express");
 const {
@@ -11,7 +12,10 @@ const {
   EmbedBuilder
 } = require("discord.js");
 
-/* ===== DISCORD BOT ===== */
+/* =========================
+   DISCORD BOT
+========================= */
+
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
 });
@@ -23,7 +27,10 @@ client.once("ready", async () => {
     .setName("verify")
     .setDescription("Rozpocznij weryfikację");
 
-  await client.application.commands.set([cmd], process.env.GUILD_ID);
+  await client.application.commands.set(
+    [cmd],
+    process.env.GUILD_ID
+  );
 });
 
 client.on("interactionCreate", async interaction => {
@@ -44,22 +51,33 @@ client.on("interactionCreate", async interaction => {
       .setURL(url)
   );
 
-  await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+  await interaction.reply({
+    embeds: [embed],
+    components: [row],
+    ephemeral: true
+  });
 });
 
-/* ===== OAUTH / WEB ===== */
+/* =========================
+   EXPRESS / OAUTH
+========================= */
+
 const app = express();
+
+app.get("/", (req, res) => {
+  res.send("OK");
+});
 
 app.get("/verify", (req, res) => {
   const { user_id } = req.query;
   if (!user_id) return res.send("Missing user_id");
 
   const url =
-    `https://discord.com/oauth2/authorize` +
+    "https://discord.com/oauth2/authorize" +
     `?client_id=${process.env.CLIENT_ID}` +
     `&redirect_uri=${process.env.BASE_URL}/callback` +
-    `&response_type=code` +
-    `&scope=identify` +
+    "&response_type=code" +
+    "&scope=identify" +
     `&state=${user_id}`;
 
   res.redirect(url);
@@ -67,6 +85,7 @@ app.get("/verify", (req, res) => {
 
 app.get("/callback", async (req, res) => {
   const { code, state } = req.query;
+  if (!code || !state) return res.send("Invalid callback");
 
   const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
     method: "POST",
@@ -84,18 +103,28 @@ app.get("/callback", async (req, res) => {
   if (!token.access_token) return res.send("OAuth error");
 
   const userRes = await fetch("https://discord.com/api/users/@me", {
-    headers: { Authorization: `Bearer ${token.access_token}` }
+    headers: {
+      Authorization: `Bearer ${token.access_token}`
+    }
   });
-  const user = await userRes.json();
 
+  const user = await userRes.json();
   if (user.id !== state) return res.send("User mismatch");
 
   await fetch(
     `https://discord.com/api/guilds/${process.env.GUILD_ID}/members/${user.id}/roles/${process.env.ROLE_ID}`,
-    { method: "PUT", headers: { Authorization: `Bot ${process.env.BOT_TOKEN}` } }
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bot ${process.env.BOT_TOKEN}`
+      }
+    }
   );
 
-  const logChannel = client.channels.cache.get(process.env.LOG_CHANNEL_ID);
+  const logChannel = client.channels.cache.get(
+    process.env.LOG_CHANNEL_ID
+  );
+
   if (logChannel) {
     logChannel.send({
       embeds: [
@@ -110,21 +139,14 @@ app.get("/callback", async (req, res) => {
   res.redirect("https://discord.com/app");
 });
 
-app.listen(process.env.PORT, () =>
-  console.log("[WEB] OAuth działa")
-);
-
-client.login(process.env.BOT_TOKEN);
-
-
-const express = require("express");
-const app = express();
-
-app.get("/", (req, res) => {
-  res.send("OK");
-});
+/* =========================
+   START
+========================= */
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log("[WEB] Serwer HTTP działa na porcie " + PORT);
+  console.log(`[WEB] Serwer HTTP działa na porcie ${PORT}`);
 });
+
+client.login(process.env.BOT_TOKEN);
