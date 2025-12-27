@@ -115,3 +115,16 @@ app.listen(process.env.PORT, () =>
 );
 
 client.login(process.env.BOT_TOKEN);
+
+
+const express = require("express");
+const app = express();
+
+app.get("/", (req, res) => {
+  res.send("OK");
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("[WEB] Serwer HTTP działa na porcie " + PORT);
+});
