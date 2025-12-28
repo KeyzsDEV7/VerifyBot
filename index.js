@@ -1,3 +1,5 @@
+const path = require("path");
+const app = express();
 require("dotenv").config();
 
 const fetch = require("node-fetch");
@@ -15,6 +17,12 @@ const {
 /* =========================
    DISCORD BOT
 ========================= */
+app.use(express.static(path.join(__dirname, "frontend")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend", "index.html"));
+});
+
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
@@ -153,4 +161,5 @@ app.listen(PORT, () => {
 });
 
 client.login(process.env.BOT_TOKEN);
+
 
